@@ -38,7 +38,10 @@ rtl_tcp -a 0.0.0.0
      
 
 # Usage
-Edit envvars in docker-compose.yaml, esp the `RTLTCP_SERVER` parameter, which will be the IP address of the WiFi or 
+Edit envvars in `docker-compose.yaml`, esp the `RTLTCP_SERVER` parameter, which will be the IP address of the WiFi or 
 Ethernet interface of the machine running `rtl_tcp`
 
-    docker compose up -d
+    docker compose up --build -d
+
+The container runs with the "restart unless stopped" policy, so it will run as long as you don't stop it and the docker 
+daemon is running on your machine.
