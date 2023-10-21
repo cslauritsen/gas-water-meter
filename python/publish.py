@@ -5,56 +5,76 @@ import os
 import re
 import sys
 
-homie_setup_msgs = [
-	('homie/meter-reader/$homie' , '4.0'),
-	('homie/meter-reader/$name' , 'RTL AMR Meter Reader'),
-	('homie/meter-reader/$state' , 'init'),
-	('homie/meter-reader/$nodes' , 'gas-meter,water-meter'),
-
-	('homie/meter-reader/gas-meter/$name' , 'Natural Gas Meter'),
-	('homie/meter-reader/gas-meter/$properties' , 'consumption'),
-	('homie/meter-reader/gas-meter/consumption/$name' , 'Gas Consumption'),
-	('homie/meter-reader/gas-meter/consumption/$unit' , 'Cubic Feet'),
-	('homie/meter-reader/gas-meter/consumption/$datatype' , 'integer'),
-
-	('homie/meter-reader/water-meter/$name' , 'Water Meter'),
-	('homie/meter-reader/water-meter/$properties' , 'consumption'),
-	('homie/meter-reader/water-meter/consumption/$name' , 'Water Consumption'),
-	('homie/meter-reader/water-meter/consumption/$unit' , 'Cubic Feet'),
-	('homie/meter-reader/water-meter/consumption/$datatype' , 'integer'),
-	('homie/meter-reader/$state' , 'ready')
-]
+"""
+Class to read Water and Gas meter consumption data from 
+bemasher/rtlamr stdout, and publish as MQTT messages using the homie convention.
+"""
 
 
 class MeterReader:
     verbose = False
     client = None
 
+    mqtt_host = '192.168.1.5'
+    mqtt_port = 1883
+    device_name = 'meter-reader'
+
     def __init__(self):
-        if os.getenv('HOMIE_RTLAML_VERBOSE'):
+        if os.getenv('VERBOSE'):
             self.verbose = True
         else:
             self.verbose = False
+
+        if os.getenv('MQTT_HOST'.upper()):
+            self.mqtt_host = os.getenv('MQTT_HOST'.upper())
+
+        if os.getenv('MQTT_PORT'.upper()):
+            self.mqtt_port = int(os.getenv('MQTT_PORT'.upper()))
+
+        if os.getenv('device_name'.upper()):
+            self.device_name = os.getenv('device_name'.upper())
+
         self.client = mqtt.Client()
-        self.client.will_set('homie/meter-reader/$state', payload='lost', qos=1, retain=True)
-        self.client.connect('192.168.1.5', 1883, 60)
+        self.client.will_set(f'homie/{self.device_name}/$state', payload='lost', qos=1, retain=True)
+        self.client.connect(self.mqtt_host, self.mqtt_port, 60)
         self.client.loop_start()
-        for top,msg in homie_setup_msgs:
+
+        self.homie_setup_msgs = [
+            (f'homie/{self.device_name}/$homie', '4.0'),
+            (f'homie/{self.device_name}/$name', 'RTL AMR Meter Reader'),
+            (f'homie/{self.device_name}/$state', 'init'),
+            (f'homie/{self.device_name}/$nodes', 'gas-meter,water-meter'),
+
+            (f'homie/{self.device_name}/gas-meter/$name', 'Natural Gas Meter'),
+            (f'homie/{self.device_name}/gas-meter/$properties', 'consumption'),
+            (f'homie/{self.device_name}/gas-meter/consumption/$name', 'Gas Consumption'),
+            (f'homie/{self.device_name}/gas-meter/consumption/$unit', 'Cubic Feet'),
+            (f'homie/{self.device_name}/gas-meter/consumption/$datatype', 'integer'),
+
+            (f'homie/{self.device_name}/water-meter/$name', 'Water Meter'),
+            (f'homie/{self.device_name}/water-meter/$properties', 'consumption'),
+            (f'homie/{self.device_name}/water-meter/consumption/$name', 'Water Consumption'),
+            (f'homie/{self.device_name}/water-meter/consumption/$unit', 'Cubic Feet'),
+            (f'homie/{self.device_name}/water-meter/consumption/$datatype', 'integer'),
+            (f'homie/{self.device_name}/$state', 'ready')
+        ]
+
+        for top, msg in self.homie_setup_msgs:
             self.client.publish(top, payload=msg, qos=1, retain=True)
 
     def publish_gas(self, val):
         self.ready()
-        self.client.publish('homie/meter-reader/gas-meter/consumption', payload=val, qos=1, retain=True);
+        self.client.publish(f'homie/{self.device_name}/gas-meter/consumption', payload=val, qos=1, retain=True);
 
     def publish_water(self, val):
         self.ready()
-        self.client.publish('homie/meter-reader/water-meter/consumption', payload=val, qos=1, retain=True);
+        self.client.publish(f'homie/{self.device_name}/water-meter/consumption', payload=val, qos=1, retain=True);
 
     def ready(self):
-        self.client.publish('homie/meter-reader/$state', payload='ready', qos=1, retain=True);
+        self.client.publish(f'homie/{self.device_name}/$state', payload='ready', qos=1, retain=True);
 
     def close(self):
-        self.client.publish('homie/meter-reader/$state', payload='disconnected', qos=1, retain=True)
+        self.client.publish(f'homie/{self.device_name}/$state', payload='disconnected', qos=1, retain=True)
         self.client.loop_stop();
         self.client.disconnect();
         self.client = None
@@ -63,8 +83,10 @@ class MeterReader:
         if self.client:
             self.close()
 
+
 if __name__ == "__main__":
     mr = None
+    exit_code = 0
     try:
         mr = MeterReader()
         print('Connected to MQTT')
@@ -76,13 +98,19 @@ if __name__ == "__main__":
             line.rstrip()
             if mr.verbose:
                 print('INPUT: ', line)
-            fs = re.findall('^.*?Consumption:\s*(\d+).*$', line)
-            if re.match('^.*?ID:37968541', line):
+            fs = re.findall(r'^.*?Consumption:\s*(\d+).*$', line)
+            if re.match(r'^.*?ID:37968541', line):
                 mr.publish_gas(fs[0])
-            elif re.match('^.*?ID:34763104', line):
+            elif re.match(r'^.*?ID:34763104', line):
                 mr.publish_water(fs[0])
 
     except KeyboardInterrupt:
-        print('Interrupted!')
+        print("Interrupted")
+        exit_code = 2
+    except Exception as e:
+        print(e)
+        exit_code = 3
     finally:
-        mr.close()
+        if mr:
+            mr.close()
+        sys.exit(exit_code)
