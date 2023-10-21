@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.rtl-sdr.rtl_tcp</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/zsh</string>
+      <string>-c</string>
+      <string>/opt/homebrew/bin/rtl_tcp -a 0.0.0.0 2&gt; &gt;(/opt/homebrew/bin/ts -m '%Y-%m-%d %H:%M:%S -' 1&gt;&amp;2) 1&gt; &gt;(/opt/homebrew/bin/ts  -m '%Y-%m-%d %H:%M:%S -')</string>
+    </array>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/var/log/rtl_tcp.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/var/log/rtl_tcp.log</string>
+</dict>
+</plist>

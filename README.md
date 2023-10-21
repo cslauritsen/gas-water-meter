@@ -15,6 +15,9 @@ decodes the signals from the utility meters.
 ## Linux
 Use your package manager, it might be there. IDK.
 
+## Windows
+I don't have windows, but I will accept a pull request. ;-)
+
 ## build
 Download the sources and build them yourself:
 
