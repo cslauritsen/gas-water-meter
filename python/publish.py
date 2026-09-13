@@ -36,6 +36,9 @@ class MeterReader:
 
         mqtt_user = os.getenv('MQTT_USER')
         mqtt_password = os.getenv('MQTT_PASSWORD')
+        if not mqtt_password and os.getenv('MQTT_PASSWORD_FILE'):
+            with open(os.getenv('MQTT_PASSWORD_FILE'), 'r') as f:
+                mqtt_password = f.read().strip()
 
         self.client = mqtt.Client()
         if mqtt_user:
