@@ -34,7 +34,12 @@ class MeterReader:
         if os.getenv('device_name'.upper()):
             self.device_name = os.getenv('device_name'.upper())
 
+        mqtt_user = os.getenv('MQTT_USER')
+        mqtt_password = os.getenv('MQTT_PASSWORD')
+
         self.client = mqtt.Client()
+        if mqtt_user:
+            self.client.username_pw_set(mqtt_user, mqtt_password)
         self.client.will_set(f'homie/{self.device_name}/$state', payload='lost', qos=1, retain=True)
         self.client.connect(self.mqtt_host, self.mqtt_port, 60)
         self.client.loop_start()

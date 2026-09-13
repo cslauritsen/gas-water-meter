@@ -19,7 +19,7 @@ class MeterReader:
     verbose = False
     client = None
 
-    mqtt_host = '192.168.1.5'
+    mqtt_host = '192.168.1.4'
     mqtt_port = 1883
     device_name = 'meter-reader'
     discovery_prefix = 'homeassistant'
@@ -42,11 +42,16 @@ class MeterReader:
         if os.getenv('DISCOVERY_PREFIX'):
             self.discovery_prefix = os.getenv('DISCOVERY_PREFIX')
 
+        mqtt_user = os.getenv('MQTT_USER')
+        mqtt_password = os.getenv('MQTT_PASSWORD')
+
         self.availability_topic = f'{self.device_name}/status'
         self.gas_state_topic = f'{self.device_name}/gas-meter/consumption'
         self.water_state_topic = f'{self.device_name}/water-meter/consumption'
 
         self.client = mqtt.Client()
+        if mqtt_user:
+            self.client.username_pw_set(mqtt_user, mqtt_password)
         self.client.will_set(self.availability_topic, payload='offline', qos=1, retain=True)
         self.client.connect(self.mqtt_host, self.mqtt_port, 60)
         self.client.loop_start()
