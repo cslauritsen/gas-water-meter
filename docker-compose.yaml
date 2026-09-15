@@ -2,11 +2,20 @@ version: '3.8'
 services:
   gas-water-publisher:
     environment: 
-      - RTLTCP_SERVER=192.168.1.156:1234
-      - VERBOSE=true
-      - MQTT_HOST=192.168.1.1
+      RTLTCP_SERVER: localhost:1234
+      VERBOSE: "1"
+      MQTT_HOST: 192.168.1.4
+      MQTT_USER: rtl
+      MQTT_PASSWORD_FILE: /run/secrets/rtl_pass
     restart: unless-stopped
+    secrets:
+      - rtl_pass
     build: 
       context: .
+    network_mode: host
+secrets:
+  rtl_pass:
+    file: ${HOME}/secrets/rtl_pass
+
 
 
