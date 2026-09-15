@@ -1,0 +1,13 @@
+[Unit]
+Description=rtl_tcp SDR server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/rtl_tcp -a 127.0.0.1 -f 915000000
+Restart=on-failure
+RestartSec=5
+User=root
+Group=plugdev
+
+[Install]
+WantedBy=multi-user.target

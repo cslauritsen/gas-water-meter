@@ -9,5 +9,7 @@ WORKDIR /app
 COPY python/requirements.txt .
 RUN pip3 install -r requirements.txt
 ENV RTLTCP_SERVER "host.docker.internal:1234"
+ENV SAMPLE_RATE "2048000"
 COPY python/ .
-CMD [ "bash", "-o", "pipefail", "-c", "/app/rtlamr -server=${RTLTCP_SERVER} | python3 /app/publishha.py" ]
+#CMD [ "bash", "-o", "pipefail", "-c", "/app/rtlamr -samplerate=${SAMPLE_RATE} -server=${RTLTCP_SERVER} | python3 /app/publishha.py" ]
+CMD [ "bash", "-o", "pipefail", "-c", "/app/rtlamr | python3 /app/publishha.py" ]
