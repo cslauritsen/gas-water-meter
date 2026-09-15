@@ -25,6 +25,8 @@ start_watchdog() {
           echo "$msg"
           logger -t rtlamr-health -p user.crit "$msg"
           reboot
+        else
+          echo "Last MQTT message received $((current_time - last_msg)) seconds ago."
         fi
       fi
     done
