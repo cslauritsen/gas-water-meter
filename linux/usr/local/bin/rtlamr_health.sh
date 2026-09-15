@@ -9,6 +9,8 @@ tmp=$(mktemp -d)
 # Temporary file to track last message time
 timestamp_file="$tmp/rtlamr_last_msg"
 
+echo "Starting rtlamr health check. Monitoring MQTT messages..."
+
 date +%s > "$timestamp_file"
 # Timeout watcher: check every 60s if >5m since last message
 watchdog_pid=
@@ -19,7 +21,9 @@ start_watchdog() {
         last_msg=$(< "$timestamp_file")
         current_time=$(date +%s)
         if [[ $((current_time - last_msg)) -gt $threshold ]]; then
-          echo "No messages received in the last 5 minutes. Rebooting..."
+          msg="RTLAMR HEALTH CHECK: No MQTT messages in ${threshold}s. Triggering reboot."
+          echo "$msg"
+          logger -t rtlamr-health -p user.crit "$msg"
           reboot
         fi
       fi
@@ -37,4 +41,5 @@ mosquitto_sub -v -h ${MQTT_HOST:-192.168.1.4} -u ${MQTT_USER:-rtl} \
   | while read publication
   do
     date +%s > "$timestamp_file"
+    echo "Received message: $publication"
   done

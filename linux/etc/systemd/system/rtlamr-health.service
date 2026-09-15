@@ -1,0 +1,16 @@
+[Unit]
+Description=RTL-AMR Health Monitor - Check MQTT message flow and reboot if stalled
+After=network-online.target mqtt.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/rtlamr_health.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
