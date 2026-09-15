@@ -52,7 +52,7 @@ class MeterReader:
         self.gas_state_topic = f'{self.device_name}/gas-meter/consumption'
         self.water_state_topic = f'{self.device_name}/water-meter/consumption'
 
-        self.client = mqtt.Client()
+        self.client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
         if mqtt_user:
             self.client.username_pw_set(mqtt_user, mqtt_password)
         self.client.will_set(self.availability_topic, payload='offline', qos=1, retain=True)

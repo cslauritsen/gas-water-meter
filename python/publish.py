@@ -40,7 +40,7 @@ class MeterReader:
             with open(os.getenv('MQTT_PASSWORD_FILE'), 'r') as f:
                 mqtt_password = f.read().strip()
 
-        self.client = mqtt.Client()
+        self.client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
         if mqtt_user:
             self.client.username_pw_set(mqtt_user, mqtt_password)
         self.client.will_set(f'homie/{self.device_name}/$state', payload='lost', qos=1, retain=True)
